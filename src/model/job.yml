@@ -3,8 +3,7 @@ type: command
 experiment_name: aqi-prediction-experiment
 compute: azureml:lelesachitcluster
 code: ./src/model
-command: >
-  python train.py
+command: python train.py
 environment: azureml:CustomEnv01:1
 inputs:
   data:
