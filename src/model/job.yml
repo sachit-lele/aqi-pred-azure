@@ -7,4 +7,4 @@ environment: azureml:CustomEnv01:1
 inputs:
   data:
     type: uri_file
-    path: azureml://datastores/workspaceblobstore/paths/azureml/city_day.csv
+    path: azureml://subscriptions/946966e0-6b02-4b92-89d2-c2e3bb3604c7/resourcegroups/MyResource/workspaces/MyWorkSpace/datastores/aqi_pred_datastore/paths/city_day.csv
