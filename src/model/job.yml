@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
+type: command
+experiment_name: aqi-prediction-experiment
+compute: azureml:lelecomputeInstance01
+command: python src/model/train.py
+environment: azureml:aqi-pred:1
+inputs:
+  data:
+    type: uri_file
+    path: azureml://datastores/aqi_datastore/paths/aqi-pred-data/city_data.csv
