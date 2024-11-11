@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.tree import DecisionTreeRegressor
 import argparse
 from sklearn.metrics import r2_score
-from azureml.core import Dataset, Run, Workspace, Experiment, Environment
+from azureml.core import Dataset, Run, Workspace, Experiment, Environment, Datastore
 from azureml.core.model import Model
 from azureml.core.compute import ComputeTarget
 from azureml.core.runconfig import RunConfiguration
@@ -161,31 +161,29 @@ def main(data_path):
     except Exception as e:
         logging.error(f"Error in model registration: {e}")
         raise
-    
+
 # Modify the end of train.py:
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--data_path", type=str, required=True)
-    args = parser.parse_args()
+    # Hardcoded data path
+    data_path = (Datastore.get(ws, 'aqi_pred_datastore'), 'city_day.csv')
     
     try:
         run_context = Run.get_context()
         # Check if running in Azure ML
         if isinstance(run_context, Run):
             # Running on Azure ML
-            main(args.data_path)
+            main(data_path)
         else:
             # Local execution - submit to Azure ML
             config = ScriptRunConfig(
                 source_directory='.',
                 script='train.py',
                 compute_target=compute_target,
-                environment=env,
-                arguments=['--data_path', args.data_path]
+                environment=env
             )
             run = experiment.submit(config)
             run.wait_for_completion(show_output=True)
     except Exception as e:
         logging.error(f"Error in run context: {e}")
         # Fallback to local execution
-        main(args.data_path)
+        main(data_path)
