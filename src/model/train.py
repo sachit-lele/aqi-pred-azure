@@ -151,7 +151,7 @@ def main(data_path):
     test_inputs[numerical_cols] = scaler.transform(test_inputs[numerical_cols])
 
     # One-hot encode categorical columns
-    encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
+    encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
     encoder.fit(df_full[categorical_cols])
 
     encoded_cols = list(encoder.get_feature_names_out(categorical_cols))
