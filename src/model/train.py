@@ -16,7 +16,6 @@ from azureml.core.runconfig import RunConfiguration
 from azureml.core.script_run_config import ScriptRunConfig
 import os
 from dotenv import load_dotenv
-from azureml.core.authentication import ServicePrincipalAuthentication
 
 load_dotenv()
 
@@ -25,7 +24,7 @@ logging.getLogger('azureml').setLevel(logging.WARNING)
 filterwarnings('ignore')
 
 # Extract Azure credentials from environment variables
-tenant_id = os.getenv('AZURE_TENANT_ID')
+"""tenant_id = os.getenv('AZURE_TENANT_ID')
 client_id = os.getenv('AZURE_CLIENT_ID')
 client_secret = os.getenv('AZURE_CLIENT_SECRET')
 subscription_id = os.getenv('AZURE_SUBSCRIPTION_ID')
@@ -57,13 +56,12 @@ svc_pr = ServicePrincipalAuthentication(
     tenant_id=tenant_id,
     service_principal_id=client_id,
     service_principal_password=client_secret
-)
+)"""
 
 ws = Workspace.get(
     name='myWorkSpace',
-    subscription_id=subscription_id,
+    subscription_id='946966e0-6b02-4b92-89d2-c2e3bb3604c7',
     resource_group='myResource',
-    auth=svc_pr
 )
 
 experiment = Experiment(workspace=ws, name='air-quality-index-experiment01')
