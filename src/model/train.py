@@ -25,10 +25,10 @@ logging.getLogger('azureml').setLevel(logging.WARNING)
 filterwarnings('ignore')
 
 # Extract Azure credentials from environment variables
-tenant_id = os.environ.get('AZURE_TENANT_ID')
-client_id = os.environ.get('AZURE_CLIENT_ID')
-client_secret = os.environ.get('AZURE_CLIENT_SECRET')
-subscription_id = os.environ.get('AZURE_SUBSCRIPTION_ID')
+tenant_id = os.getenv('AZURE_TENANT_ID')
+client_id = os.getenv('AZURE_CLIENT_ID')
+client_secret = os.getenv('AZURE_CLIENT_SECRET')
+subscription_id = os.getenv('AZURE_SUBSCRIPTION_ID')
 
 # **Temporary Debugging Logs**
 logging.info(f"AZURE_TENANT_ID: {tenant_id}")
