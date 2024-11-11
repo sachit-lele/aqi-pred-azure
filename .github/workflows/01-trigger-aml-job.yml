@@ -28,7 +28,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install azure-ai-ml azureml-core pandas numpy scikit-learn
+        pip install azure-ai-ml azureml-core pandas numpy scikit-learn azureml-dataset-runtime
 
     - name: Set Azure ML Workspace
       run: |
@@ -40,4 +40,4 @@ jobs:
         
     - name: Submit Azure ML job
       run: |
-        python src/model/train.py --data_path "azureml://subscriptions/946966e0-6b02-4b92-89d2-c2e3bb3604c7/resourcegroups/MyResource/workspaces/MyWorkSpace/datastores/aqi_pred_datastore/paths/city_day.csv"
+        python ./src/model/train.py 
