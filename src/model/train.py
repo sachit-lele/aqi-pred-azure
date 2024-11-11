@@ -23,31 +23,47 @@ logging.basicConfig(level=logging.INFO)
 logging.getLogger('azureml').setLevel(logging.WARNING)
 filterwarnings('ignore')
 
-missing_cred = []
-if not os.environ.get('AZURE_TENANT_ID'):
-    missing_cred.append('AZURE_TENANT_ID')
-if not os.environ.get('AZURE_CLIENT_ID'):
-    missing_cred.append('AZURE_CLIENT_ID')
-if not os.environ.get('AZURE_CLIENT_SECRET'):
-    missing_cred.append('AZURE_CLIENT_SECRET')
-if not os.environ.get('AZURE_SUBSCRIPTION_ID'):
-    missing_cred.append('AZURE_SUBSCRIPTION_ID')
+# Extract Azure credentials from environment variables
+tenant_id = os.environ.get('AZURE_TENANT_ID')
+client_id = os.environ.get('AZURE_CLIENT_ID')
+client_secret = os.environ.get('AZURE_CLIENT_SECRET')
+subscription_id = os.environ.get('AZURE_SUBSCRIPTION_ID')
 
-if missing_cred:
-    raise Exception(f"Missing credentials: {', '.join(missing_cred)}")
+# **Temporary Debugging Logs**
+logging.info(f"AZURE_TENANT_ID: {tenant_id}")
+logging.info(f"AZURE_CLIENT_ID: {client_id}")
+logging.info(f"AZURE_CLIENT_SECRET: {client_secret}")
+logging.info(f"AZURE_SUBSCRIPTION_ID: {subscription_id}")
+# **End of Temporary Logs**
+
+# Validate that all credentials are available
+missing_credentials = []
+if not tenant_id:
+    missing_credentials.append("AZURE_TENANT_ID")
+if not client_id:
+    missing_credentials.append("AZURE_CLIENT_ID")
+if not client_secret:
+    missing_credentials.append("AZURE_CLIENT_SECRET")
+if not subscription_id:
+    missing_credentials.append("AZURE_SUBSCRIPTION_ID")
+
+if missing_credentials:
+    logging.error(f"Missing environment variables: {', '.join(missing_credentials)}")
+    raise Exception(f"Missing environment variables: {', '.join(missing_credentials)}")
 
 # Authentication with Service Principal
 svc_pr = ServicePrincipalAuthentication(
-    tenant_id=os.environ.get('AZURE_TENANT_ID'),
-    service_principal_id=os.environ.get('AZURE_CLIENT_ID'),
-    service_principal_password=os.environ.get('AZURE_CLIENT_SECRET')
+    tenant_id=tenant_id,
+    service_principal_id=client_id,
+    service_principal_password=client_secret
 )
 
 ws = Workspace.get(
     name='myWorkSpace',
-    subscription_id='946966e0-6b02-4b92-89d2-c2e3bb3604c7',
+    subscription_id=subscription_id,
     resource_group='myResource',
-    auth=svc_pr)
+    auth=svc_pr
+)
 
 experiment = Experiment(workspace=ws, name='air-quality-index-experiment01')
 
