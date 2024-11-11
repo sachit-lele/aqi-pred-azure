@@ -46,7 +46,7 @@ svc_pr = ServicePrincipalAuthentication(
 ws = Workspace.get(
     name='myWorkSpace',
     subscription_id='946966e0-6b02-4b92-89d2-c2e3bb3604c7',
-    resource_group='myResource'
+    resource_group='myResource',
     auth=svc_pr)
 
 experiment = Experiment(workspace=ws, name='air-quality-index-experiment01')
