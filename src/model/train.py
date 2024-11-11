@@ -15,9 +15,10 @@ from azureml.core.compute import ComputeTarget
 from azureml.core.runconfig import RunConfiguration
 from azureml.core.script_run_config import ScriptRunConfig
 import os
-import json
+from dotenv import load_dotenv
 from azureml.core.authentication import ServicePrincipalAuthentication
 
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger('azureml').setLevel(logging.WARNING)
