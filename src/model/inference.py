@@ -80,7 +80,7 @@ def main():
         raise
 
     # Define Inference Configuration
-    inference_config = InferenceConfig(entry_script="inference.py",
+    inference_config = InferenceConfig(entry_script="src/model/inference.py",
                                        environment=env)
     logging.info("InferenceConfig created.")
 
