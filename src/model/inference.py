@@ -85,7 +85,7 @@ def main():
     logging.info("InferenceConfig created.")
 
     # Define Pipeline Output
-    output_datastore_name = 'predictions_datastore'
+    output_datastore_name = 'aqi_pred_datastore'
     try:
         output_datastore = Datastore.get(ws, output_datastore_name)
         logging.info(f"Using Output Datastore: {output_datastore_name}")
