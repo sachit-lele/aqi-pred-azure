@@ -1,77 +1,59 @@
+# batch_inference.py
+
+from azureml.core import Workspace, Dataset, Model, Experiment, Datastore
+from azureml.core.compute import ComputeTarget, AmlCompute
+from azureml.core.environment import Environment
+from azureml.core.model import InferenceConfig
+from azureml.pipeline.core import Pipeline, PipelineData
+from azureml.pipeline.steps import PythonScriptStep
 import os
-import mlflow
-import pandas as pd
-import argparse
-import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+ws = Workspace.get(
+    name='myWorkSpace',
+    subscription_id='946966e0-6b02-4b92-89d2-c2e3bb3604c7',
+    resource_group='myResource',
+)
 
-def load_model(model_path):
-    """
-    Load the ML model from the specified path.
-    """
-    logger.info(f"Loading model from: {model_path}")
-    try:
-        model = mlflow.pyfunc.load_model(model_path)
-        logger.info("Model loaded successfully.")
-        return model
-    except Exception as e:
-        logger.error(f"Failed to load model. Error: {e}")
-        raise
+experiment = Experiment(workspace=ws, name='air-quality-index-experiment01')
 
-def make_predictions(model, input_data):
-    """
-    Make predictions using the loaded model and input data.
-    """
-    logger.info("Making predictions...")
-    try:
-        predictions = model.predict(input_data)
-        logger.info("Predictions completed successfully.")
-        return predictions
-    except Exception as e:
-        logger.error(f"Prediction failed. Error: {e}")
-        raise
+clustername = 'lelesachitcluster'
+compute_target = ComputeTarget(workspace=ws, name=clustername)
 
-def main(model_path, input_file, output_file):
-    """
-    Main function to handle the inference process.
-    """
-    # Load the model
-    model = load_model(model_path)
+env = Environment.get(workspace=ws, name='CustomEnv01')
 
-    # Load input data
-    logger.info(f"Loading input data from: {input_file}")
-    try:
-        data = pd.read_csv(input_file)
-        logger.info(f"Input data shape: {data.shape}")
-    except Exception as e:
-        logger.error(f"Failed to read input file. Error: {e}")
-        raise
+input_data_path = (Datastore.get(ws, 'aqi_pred_datastore'), 'test.csv')
 
-    # Make predictions
-    predictions = make_predictions(model, data)
 
-    # Prepare output DataFrame
-    output_df = pd.DataFrame(predictions, columns=['Predictions'])
-    output_df['Source_File'] = os.path.basename(input_file)
+# Inference Config
+inference_config = InferenceConfig(entry_script="inference.py",
+                                   environment=env)
 
-    # Save predictions to CSV
-    logger.info(f"Saving predictions to: {output_file}")
-    try:
-        output_df.to_csv(output_file, index=False)
-        logger.info("Predictions saved successfully.")
-    except Exception as e:
-        logger.error(f"Failed to save predictions. Error: {e}")
-        raise
+# Define PipelineData for output
+predictions_output = PipelineData("predictions", datastore=datastore)
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Local Inference Script for ML Model")
-    parser.add_argument('--model-path', type=str, required=True, help='Path to the trained model directory')
-    parser.add_argument('--input-file', type=str, required=True, help='Path to the input CSV file with test data')
-    parser.add_argument('--output-file', type=str, default='predictions.csv', help='Path to save the output predictions')
+# Define Pipeline Step
+inference_step = PythonScriptStep(
+    name="Batch Inference",
+    script_name="inference.py",
+    arguments=["--input-data", dataset.as_named_input('input_dataset').as_mount(),
+               "--model-name", model.name,
+               "--output", predictions_output],
+    outputs=[predictions_output],
+    compute_target=compute_target,
+    source_directory='src/model',  # Directory containing inference.py and other scripts
+    runconfig=inference_config
+)
 
-    args = parser.parse_args()
+# Create Pipeline
+pipeline = Pipeline(workspace=ws, steps=[inference_step])
 
-    main(args.model_path, args.input_file, args.output_file)
+# Create Experiment
+experiment = Experiment(ws, 'batch_inference_experiment')
+
+# Submit Pipeline
+pipeline_run = experiment.submit(pipeline)
+pipeline_run.wait_for_completion(show_output=True)
+
+# Download Predictions
+predictions_path = predictions_output.download(target_path='.', overwrite=True)
+print(f"Predictions downloaded to {predictions_path}")
