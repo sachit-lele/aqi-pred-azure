@@ -40,19 +40,8 @@ jobs:
       - name: Configure Azure ML Workspace
         run: |
             az configure --defaults group=myResource workspace=myWorkSpace
-  
-        # 7. Verify model.pkl Exists
-      - name: Verify model.pkl Exists
-        run: |
-            MODEL_PATH="models/dectree_aqi_model.pkl"  # Update the path if different
-            if [ ! -f "$MODEL_PATH" ]; then
-                echo "Error: $MODEL_PATH not found!"
-                exit 1  # Exit with failure if the model file is missing
-            else
-                echo "$MODEL_PATH is present."
-            fi
 
-      # 8. Run Batch Inference Script
+      # 7. Run Batch Inference Script
       - name: Run Batch Inference
         run: |
           python src/model/batch_inference.py
@@ -60,7 +49,7 @@ jobs:
 
 
     
-      # 9. (Optional) Upload Predictions to GitHub Artifacts or Azure Blob Storage
+      # 8. (Optional) Upload Predictions to GitHub Artifacts or Azure Blob Storage
       # If you wish to upload the predictions as artifacts, uncomment the following steps
       # - name: Upload Predictions as Artifact
       #   uses: actions/upload-artifact@v3
