@@ -14,6 +14,8 @@ from azureml.core.model import Model
 from azureml.core.compute import ComputeTarget
 from azureml.core.runconfig import RunConfiguration
 from azureml.core.script_run_config import ScriptRunConfig
+import os
+
 
 logging.basicConfig(level=logging.INFO)
 filterwarnings('ignore')
@@ -146,28 +148,44 @@ def main(data_path):
 
     try_model(tree)
 
-    # Save model and preprocessors to outputs for Azure ML
-    joblib.dump(tree, './outputs/dectree_aqi_model.pkl')
+    try:
+        os.makedirs('./outputs', exist_ok=True)
 
-    model_path = 'outputs/dectree_aqi_model.pkl'
-    Model.register(workspace=ws, model_path=model_path, model_name='dectree_aqi_model')
+        #Save model and preprocessors to outputs for Azure ML
+        joblib.dump(tree, './outputs/dectree_aqi_model.pkl')
 
+        model_path = 'outputs/dectree_aqi_model.pkl'
+        Model.register(workspace=ws, model_path=model_path, model_name='dectree_aqi_model')
+        logging.info("Model registered successfully")
+
+    except Exception as e:
+        logging.error(f"Error in model registration: {e}")
+        raise
+    
+# Modify the end of train.py:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_path", type=str, required=True)
     args = parser.parse_args()
     
-    if Run.get_context().get_details()['jobId'] is not None:
-        # Running on Azure ML
+    try:
+        run_context = Run.get_context()
+        # Check if running in Azure ML
+        if isinstance(run_context, Run):
+            # Running on Azure ML
+            main(args.data_path)
+        else:
+            # Local execution - submit to Azure ML
+            config = ScriptRunConfig(
+                source_directory='.',
+                script='train.py',
+                compute_target=compute_target,
+                environment=env,
+                arguments=['--data_path', args.data_path]
+            )
+            run = experiment.submit(config)
+            run.wait_for_completion(show_output=True)
+    except Exception as e:
+        logging.error(f"Error in run context: {e}")
+        # Fallback to local execution
         main(args.data_path)
-    else:
-        # Local execution - submit to Azure ML
-        config = ScriptRunConfig(
-            source_directory='.',
-            script='train.py',
-            compute_target=compute_target,
-            environment=env,
-            arguments=['--data_path', args.data_path]
-        )
-        run = experiment.submit(config)
-        run.wait_for_completion(show_output=True)
