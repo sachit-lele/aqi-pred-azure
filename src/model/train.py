@@ -20,9 +20,21 @@ from azureml.core.authentication import ServicePrincipalAuthentication
 
 
 logging.basicConfig(level=logging.INFO)
+logging.getLogger('azureml').setLevel(logging.WARNING)
 filterwarnings('ignore')
 
-# Define the Service Principal credentials
+missing_cred = []
+if not os.environ.get('AZURE_TENANT_ID'):
+    missing_cred.append('AZURE_TENANT_ID')
+if not os.environ.get('AZURE_CLIENT_ID'):
+    missing_cred.append('AZURE_CLIENT_ID')
+if not os.environ.get('AZURE_CLIENT_SECRET'):
+    missing_cred.append('AZURE_CLIENT_SECRET')
+if not os.environ.get('AZURE_SUBSCRIPTION_ID'):
+    missing_cred.append('AZURE_SUBSCRIPTION_ID')
+
+if missing_cred:
+    raise Exception(f"Missing credentials: {', '.join(missing_cred)}")
 
 # Authentication with Service Principal
 svc_pr = ServicePrincipalAuthentication(
@@ -35,7 +47,7 @@ ws = Workspace.get(
     name='myWorkSpace',
     subscription_id='946966e0-6b02-4b92-89d2-c2e3bb3604c7',
     resource_group='myResource'
-)
+    auth=svc_pr)
 
 experiment = Experiment(workspace=ws, name='air-quality-index-experiment01')
 
