@@ -38,6 +38,6 @@ jobs:
       run: |
         ls -R
         
-    - name: Submit Azure ML job
+    - name: run training script
       run: |
-        python ./src/model/train.py 
+        python src/model/train.py 
