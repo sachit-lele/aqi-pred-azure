@@ -40,4 +40,4 @@ jobs:
         
     - name: Submit Azure ML job
       run: |
-        python src/train.py
+        python src/model/train.py
