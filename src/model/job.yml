@@ -2,7 +2,8 @@ $schema: https://azuremlschemas.azureedge.net/latest/commandJob.schema.json
 type: command
 experiment_name: aqi-prediction-experiment
 compute: azureml:lelesachitcluster
-command: python Users/sachit.lele.btech2021/train.py
+code: "./Users/sachit.lele.btech2021/"
+command: python train.py
 environment: azureml:CustomEnv01:1
 inputs:
   data:
