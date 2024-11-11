@@ -15,13 +15,17 @@ from azureml.core.compute import ComputeTarget
 from azureml.core.runconfig import RunConfiguration
 from azureml.core.script_run_config import ScriptRunConfig
 import os
+<<<<<<< HEAD
 import json
 from azureml.core.authentication import ServicePrincipalAuthentication
+=======
+>>>>>>> c5b2e9a85469f797cc5b7e11de554191e025a091
 
 
 logging.basicConfig(level=logging.INFO)
 filterwarnings('ignore')
 
+<<<<<<< HEAD
 # Define the Service Principal credentials
 
 # Authentication with Service Principal
@@ -31,6 +35,8 @@ svc_pr = ServicePrincipalAuthentication(
     service_principal_password=os.environ.get('AZURE_CLIENT_SECRET')
 )
 
+=======
+>>>>>>> c5b2e9a85469f797cc5b7e11de554191e025a091
 ws = Workspace.get(
     name='myWorkSpace',
     subscription_id='946966e0-6b02-4b92-89d2-c2e3bb3604c7',
@@ -52,10 +58,15 @@ def main(data_path):
     # Get the experiment run context
     run = Run.get_context()
 
+<<<<<<< HEAD
     datastore = Datastore.get(ws, 'aqi_pred_datastore')
     data_path = [(datastore, 'city_day.csv')]
     # Load dataset using Azure ML Dataset API
     dataset = Dataset.Tabular.from_delimited_files(path = data_path)
+=======
+    # Load dataset using Azure ML Dataset API
+    dataset = Dataset.File.from_files(data_path)
+>>>>>>> c5b2e9a85469f797cc5b7e11de554191e025a091
     df_city_day = dataset.to_pandas_dataframe()
 
     # Convert Date column to datetime and sort by Date
@@ -189,7 +200,11 @@ if __name__ == "__main__":
         else:
             # Local execution - submit to Azure ML
             config = ScriptRunConfig(
+<<<<<<< HEAD
                 source_directory='src/model',
+=======
+                source_directory='.',
+>>>>>>> c5b2e9a85469f797cc5b7e11de554191e025a091
                 script='train.py',
                 compute_target=compute_target,
                 environment=env
