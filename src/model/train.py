@@ -1,22 +1,47 @@
 import numpy as np
 import pandas as pd
 import logging
-import argparse
-import datetime
 from warnings import filterwarnings
 import joblib
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.tree import DecisionTreeRegressor
+import argparse
 from sklearn.metrics import r2_score
+from azureml.core import Dataset, Run, Workspace, Experiment, Environment
+from azureml.core.model import Model
+from azureml.core.compute import ComputeTarget
+from azureml.core.runconfig import RunConfiguration
+from azureml.core.script_run_config import ScriptRunConfig
 
 logging.basicConfig(level=logging.INFO)
 filterwarnings('ignore')
 
+ws = Workspace.get(
+    name='myWorkSpace',
+    subscription_id='946966e0-6b02-4b92-89d2-c2e3bb3604c7',
+    resource_group='myResource'
+)
+
+experiment = Experiment(workspace=ws, name='air-quality-index-experiment01')
+
+clustername = 'lelesachitcluster'
+compute_target = ComputeTarget(workspace=ws, name=clustername)
+
+env = Environment.get(workspace=ws, name='CustomEnv01')
+
+runconfig = RunConfiguration()
+runconfig.environment = env
+runconfig.target = compute_target
+
 def main(data_path):
-    # Load dataset
-    df_city_day = pd.read_csv(data_path)
+    # Get the experiment run context
+    run = Run.get_context()
+
+    # Load dataset using Azure ML Dataset API
+    dataset = Dataset.File.from_files(data_path)
+    df_city_day = dataset.to_pandas_dataframe()
 
     # Convert Date column to datetime and sort by Date
     df_city_day['Date'] = pd.to_datetime(df_city_day['Date'], format='%Y-%m-%d')
@@ -84,7 +109,7 @@ def main(data_path):
     test_inputs[numerical_cols] = scaler.transform(test_inputs[numerical_cols])
 
     # One-hot encode categorical columns
-    encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+    encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
     encoder.fit(df_full[categorical_cols])
 
     encoded_cols = list(encoder.get_feature_names_out(categorical_cols))
@@ -113,18 +138,36 @@ def main(data_path):
         logging.info(f"Train R² Score: {train_r2_score}")
         logging.info(f"Validation R² Score: {val_r2_score}")
         logging.info(f"Test R² Score: {test_r2_score}")
-        return
+        
+        # Log metrics to Azure ML
+        run.log("Train R² Score", train_r2_score)
+        run.log("Validation R² Score", val_r2_score)
+        run.log("Test R² Score", test_r2_score)
 
     try_model(tree)
 
     # Save model and preprocessors to outputs for Azure ML
     joblib.dump(tree, './outputs/dectree_aqi_model.pkl')
-    joblib.dump(imputer, './outputs/imputer.pkl')
-    joblib.dump(scaler, './outputs/scaler.pkl')
-    joblib.dump(encoder, './outputs/encoder.pkl')
+
+    model_path = 'outputs/dectree_aqi_model.pkl'
+    Model.register(workspace=ws, model_path=model_path, model_name='dectree_aqi_model')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_path", type=str, help="Path to the input CSV data file")
+    parser.add_argument("--data_path", type=str, required=True)
     args = parser.parse_args()
-    main(args.data_path)
+    
+    if Run.get_context().get_details()['jobId'] is not None:
+        # Running on Azure ML
+        main(args.data_path)
+    else:
+        # Local execution - submit to Azure ML
+        config = ScriptRunConfig(
+            source_directory='.',
+            script='train.py',
+            compute_target=compute_target,
+            environment=env,
+            arguments=['--data_path', args.data_path]
+        )
+        run = experiment.submit(config)
+        run.wait_for_completion(show_output=True)
