@@ -23,12 +23,11 @@ def main():
     args = parser.parse_args()
 
     # Connect to Azure ML Workspace
-    try:
-        ws = Workspace.from_config(path=args.workspace_config)
-        logging.info(f"Connected to workspace: {ws.name}")
-    except Exception as e:
-        logging.error(f"Failed to connect to Azure ML Workspace: {e}")
-        raise
+    ws = Workspace.get(
+    name='myWorkSpace',
+    subscription_id='946966e0-6b02-4b92-89d2-c2e3bb3604c7',
+    resource_group='myResource',
+    )
 
     # Define Experiment
     experiment_name = 'batch_inference_experiment'
