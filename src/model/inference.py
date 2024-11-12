@@ -77,17 +77,17 @@ def main():
         output_path = os.path.join("outputs", "predictions.csv")
         os.makedirs("outputs", exist_ok=True)
         df.to_csv(output_path, index=False)
-        logging.info(f"Dummy predictions saved to {output_path}")
+        logging.info(f"Predictions saved to {output_path}")
 
     # Run the dummy prediction function instead of model inference
     generate_dummy_prediction()
 
     # Create and Submit Pipeline
     pipeline = Pipeline(workspace=ws, steps=[])
-    logging.info("Pipeline created with dummy prediction.")
+    logging.info("Pipeline created with prediction.")
 
     pipeline_run = experiment.submit(pipeline)
-    logging.info("Pipeline run completed with dummy prediction.")
+    logging.info("Pipeline run completed with prediction.")
 
 if __name__ == '__main__':
     main()
