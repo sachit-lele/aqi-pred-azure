@@ -1,84 +1,93 @@
-# src/models/inference.py
+# batch_inference.py
 
 import os
-import joblib
 import pandas as pd
 import argparse
 import logging
 
-from azureml.core import Workspace, Dataset, Model, Experiment, Datastore
-from azureml.core.compute import ComputeTarget, AmlCompute
-from azureml.core.environment import Environment
-from azureml.core.model import InferenceConfig
+from azureml.core import Workspace, Dataset, Experiment, Datastore
+from azureml.core.compute import ComputeTarget
 from azureml.pipeline.core import Pipeline, PipelineData
 from azureml.pipeline.steps import PythonScriptStep
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def save_predictions(predictions, output_path):
-    predictions_df = pd.DataFrame(predictions, columns=["Prediction"])
-    predictions_df.to_csv(output_path, index=False)
-    logging.info(f"Predictions saved to {output_path}")
-
-def main(model_path, data_path, output_path="predictions.csv"):
-    # Load model and data
-    model = load_model(model_path)
-    data = load_data(data_path)
-
-    # Instead of running predictions, append the number 103 to the output
-    predictions = append_number(data, number=103)
-
-    # Save predictions
-    save_predictions(predictions, output_path)
-
-def load_model(model_path):
-    """
-    Dummy load_model function to keep the model code intact.
-    """
-    try:
-        # Normally, you would load your model here
-        # model = joblib.load(model_path)
-        # logging.info(f"Model loaded from {model_path}")
-        # return model
-        
-        # Since we're not using the model, return None or a dummy object
-        logging.info(f"Model loading skipped. Appending instead.")
-        return None
-    except Exception as e:
-        logging.error(f"Failed to load model from {model_path}: {e}")
-        raise
-
-def load_data(data_path):
-    """
-    Loads data from a CSV file.
-    """
-    try:
-        data = pd.read_csv(data_path)
-        logging.info(f"Data loaded from {data_path}")
-        return data
-    except Exception as e:
-        logging.error(f"Failed to load data from {data_path}: {e}")
-        raise
-
-def append_number(data, number=103):
-    """
-    Appends the specified number to the predictions.
-    """
-    try:
-        # Create a list with the number for each row in the data
-        predictions = [number] * len(data)
-        logging.info(f"Appended number {number} to predictions.")
-        return predictions
-    except Exception as e:
-        logging.error(f"Failed to append number {number} to predictions: {e}")
-        raise
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Inference Script")
-    parser.add_argument("--model-path", type=str, required=True, help="Path to the trained model file")
-    parser.add_argument("--data-path", type=str, required=True, help="Path to the input data CSV file")
-    parser.add_argument("--output", type=str, default="predictions.csv", help="Path to save predictions")
+def main():
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Batch Inference Pipeline Script")
+    parser.add_argument('--workspace-config', type=str, default='config.json', help='Path to Azure ML workspace config file')
     args = parser.parse_args()
 
-    main(args.model_path, args.data_path, args.output)
+    # Connect to Azure ML Workspace
+    ws = Workspace.get(
+        name='myWorkSpace',
+        subscription_id='946966e0-6b02-4b92-89d2-c2e3bb3604c7',
+        resource_group='myResource',
+    )
+
+    # Define Experiment
+    experiment_name = 'batch_inference_experiment'
+    experiment = Experiment(workspace=ws, name=experiment_name)
+    logging.info(f"Using Experiment: {experiment_name}")
+
+    # Define or get Compute Target
+    compute_name = 'lelesachitcluster'
+    try:
+        compute_target = ComputeTarget(workspace=ws, name=compute_name)
+        logging.info(f"Found existing compute target: {compute_name}")
+    except Exception as e:
+        logging.error(f"Compute target '{compute_name}' not found: {e}")
+        raise
+
+    # Get Datastore
+    datastore_name = 'aqi_pred_datastore'
+    try:
+        datastore = Datastore.get(ws, datastore_name)
+        logging.info(f"Using Datastore: {datastore_name}")
+    except Exception as e:
+        logging.error(f"Datastore '{datastore_name}' not found: {e}")
+        raise
+
+    # Get Dataset
+    dataset_name = 'test_dataset'
+    try:
+        dataset = Dataset.File.from_files(path=(datastore, 'test.csv'))
+        logging.info(f"Using Dataset: {dataset_name}")
+    except Exception as e:
+        logging.error(f"Dataset '{dataset_name}' creation failed: {e}")
+        raise
+
+    # Define Pipeline Output
+    output_datastore_name = 'aqi_pred_datastore'
+    try:
+        output_datastore = Datastore.get(ws, output_datastore_name)
+        logging.info(f"Using Output Datastore: {output_datastore_name}")
+    except Exception as e:
+        logging.error(f"Output Datastore '{output_datastore_name}' not found: {e}")
+        raise
+
+    predictions_output = PipelineData("predictions", datastore=output_datastore)
+    logging.info("PipelineData for predictions defined.")
+
+    # Define Pipeline Step
+    def generate_dummy_prediction():
+        # This function will save a CSV file with a fixed prediction value of 220
+        df = pd.DataFrame({"prediction": [220]})
+        output_path = os.path.join("outputs", "predictions.csv")
+        os.makedirs("outputs", exist_ok=True)
+        df.to_csv(output_path, index=False)
+        logging.info(f"Dummy predictions saved to {output_path}")
+
+    # Run the dummy prediction function instead of model inference
+    generate_dummy_prediction()
+
+    # Create and Submit Pipeline
+    pipeline = Pipeline(workspace=ws, steps=[])
+    logging.info("Pipeline created with dummy prediction.")
+
+    pipeline_run = experiment.submit(pipeline)
+    logging.info("Pipeline run completed with dummy prediction.")
+
+if __name__ == '__main__':
+    main()
