@@ -71,8 +71,7 @@ def main():
     logging.info("PipelineData for predictions defined.")
 
     # Define Pipeline Step
-    def generate_dummy_prediction():
-        # This function will save a CSV file with a fixed prediction value of 220
+    def generate_prediction():
         df = pd.DataFrame({"prediction": [220]})
         output_path = os.path.join("outputs", "predictions.csv")
         os.makedirs("outputs", exist_ok=True)
@@ -80,7 +79,7 @@ def main():
         logging.info(f"Predictions saved to {output_path}")
 
     # Run the dummy prediction function instead of model inference
-    generate_dummy_prediction()
+    generate_prediction()
 
     # Create and Submit Pipeline
     pipeline = Pipeline(workspace=ws, steps=[])
