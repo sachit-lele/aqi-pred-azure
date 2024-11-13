@@ -1,0 +1,5 @@
+outs:
+- md5: 6d9c5b1a275ad13cfe18de2d9ade59c1
+  size: 65648581
+  hash: md5
+  path: city_hour.csv
