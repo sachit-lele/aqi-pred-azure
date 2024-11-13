@@ -1,2 +1,5 @@
 src/model/.env
-data/newdata
+data/newdata/city_day.csv
+data/newdata/station_day.csv
+data/newdata/station_hour.csv
+data/newdata/stations.csv
