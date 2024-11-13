@@ -1,6 +1,7 @@
 [core]
     remote = myremote
+
 ['remote "myremote"']
     url = azure://aqi-data
-    account_name = myworkspacestorage311
-    account_key = DqsXYdy3MHxRjaZlLhELx4phFdNXUJnK35aoMx3iAn1SM379pHea5T0prb+oXGjlsEy7j+dEpGpx+ASt62ftgw==
+    account_name = ${AZURE_STORAGE_ACCOUNT_NAME}
+    account_key = ${AZURE_STORAGE_ACCOUNT_KEY}
