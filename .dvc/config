@@ -4,7 +4,10 @@
 ['remote "myremote"']
     url = azure://aqi-data
 <<<<<<< HEAD
+<<<<<<< HEAD
     account_name = ${AZURE_STORAGE_ACCOUNT_NAME}
     account_key = ${AZURE_STORAGE_ACCOUNT_KEY}
+=======
+>>>>>>> parent of bc8e356 (MAKE CHANGES)
 =======
 >>>>>>> parent of bc8e356 (MAKE CHANGES)
